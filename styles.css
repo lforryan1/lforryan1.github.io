@@ -16,6 +16,7 @@
 html, body {
   height: 100%;
   min-height: 100vh;
+  overflow-x: hidden; /* prevent horizontal scrolling */
 }
 
 main {
@@ -64,10 +65,10 @@ body {
 }
 
 .container {
-  width: 90%;
+  width: 100%;
   max-width: 880px;
   margin: 0 auto;
-  padding: 1rem 1rem;
+  padding: 1rem 1.5rem;
 }
 
 
@@ -82,7 +83,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 2rem; /* evenly spaced */
+  gap: 1rem;
+  flex-wrap: wrap; /* allow wrapping on small screens */
   text-align: center;
 }
 
@@ -93,6 +95,9 @@ body {
   font-size: 0.95rem;
   min-width: 120px; /* optional: fixes layout width so center is preserved */
   text-align: center;
+  min-width: unset; /* remove fixed min-width */
+  padding: 0rem;
+  white-space: normal;
 }
 
 .nav a.beacon-blue {
@@ -106,7 +111,7 @@ body {
 }
 
 .hero h1 {
-  font-size: 4rem;
+  font-size: clamp(2rem, 8vw, 4rem);
   margin-bottom: 0.5rem;
   font-weight: 700;
 }
@@ -122,7 +127,7 @@ body {
 }
 
 .subtitle {
-  font-size: 2rem;
+  font-size: clamp(1rem, 5vw, 2rem);
   margin-bottom: 1.2rem;
   color: #444;
 }
