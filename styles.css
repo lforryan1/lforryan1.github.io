@@ -87,6 +87,18 @@ body {
   flex-wrap: wrap;               /* allow wrapping only if necessary */
   text-align: center;
   padding: 0 1rem;
+  margin: 0.4rem 0rem;
+}
+
+nav-items {
+  display: flex;
+  justify-content: space-evenly;
+  flex-direction: row;
+}
+
+nav-items-right {
+  display: flex;
+  justify-content: space-between;
 }
 
 .nav a {
