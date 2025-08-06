@@ -73,7 +73,6 @@ body {
 
 
 .site-header {
-  width: 100%;
   padding: 0.2rem 0;
   border-bottom: 1.5px solid #d8dee9; /* soft muted grey-blue */
   background-color: var(--bg); /* ensures white-ish background if needed */
@@ -83,22 +82,12 @@ body {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
-  gap: clamp(0.5rem, 2vw, 2rem); /* dynamic spacing */
-  flex-wrap: wrap;               /* allow wrapping only if necessary */
+  gap: clamp(0.5rem, 2vw, 2rem);
+  flex-wrap: wrap;
   text-align: center;
   padding: 0 1rem;
-  margin: 0.4rem 0rem;
-}
-
-nav-items {
-  display: flex;
-  justify-content: space-evenly;
-  flex-direction: row;
-}
-
-nav-items-right {
-  display: flex;
-  justify-content: space-between;
+  margin: 0.4rem auto;  /* ✅ center the nav horizontally */
+  max-width: clamp(300px, 80%, 1000px); /* ✅ prevent it from getting too wide */
 }
 
 .nav a {
@@ -106,16 +95,14 @@ nav-items-right {
   text-decoration: none;
   font-weight: 600;
   font-size: 0.95rem;
-  min-width: 120px; /* optional: fixes layout width so center is preserved */
   text-align: center;
-  min-width: unset; /* remove fixed min-width */
   white-space: nowrap;   /* prevent text from breaking mid-word */
   padding: 0.25rem 0.5rem;
 }
 
 .nav a.beacon-blue {
   color: var(--primary);
-  font-size: 1.2rem;
+  font-size: 1.6rem;
 }
 
 .hero {
