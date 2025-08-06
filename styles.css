@@ -24,7 +24,7 @@ main {
 }
 
 main h2 {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   margin-top: 2rem;
   margin-bottom: 1rem;
   font-weight: 700;
@@ -68,9 +68,8 @@ body {
   width: 100%;
   max-width: 880px;
   margin: 0 auto;
-  padding: 1rem 1.5rem;
+  padding: 1.8rem 1.5rem;
 }
-
 
 .site-header {
   padding: 0.2rem 0;
@@ -111,7 +110,6 @@ body {
 }
 
 .hero h1 {
-  font-size: clamp(2rem, 8vw, 4rem);
   margin-bottom: 0.5rem;
   font-weight: 700;
 }
@@ -121,15 +119,19 @@ body {
   height: auto;
   display: block;
   margin: 0 auto;
-  margin-bottom: 1rem;
-  transform: scale(1.8); /* visually enlarges the logo */
+  margin-bottom: 1.4rem;
+  transform: scale(2.0); /* visually enlarges the logo */
   transform-origin: center;
 }
 
 .subtitle {
-  font-size: clamp(1rem, 5vw, 2rem);
-  margin-bottom: 1.2rem;
-  color: var(--text);
+  font-size: 3rem;
+  line-height: 3rem;
+  margin-top: 31px;
+  margin-bottom: 9px;
+  text-align: center;
+  letter-spacing: -1px;
+  font-weight: 600;
 }
 
 .actions {
@@ -137,6 +139,8 @@ body {
   justify-content: center;
   gap: 1rem;
   flex-wrap: wrap;
+  margin-top: 2rem;
+  padding-top: 2rem;
 }
 
 .btn {
@@ -229,22 +233,22 @@ button.btn.primary {
   text-align: center;
 }
 
-.hero-info {
+.info {
   text-align: center;
   padding: 0.5rem 0;
 }
-.hero-info h2 {
-  font-size: 2rem;
+.info h2 {
+  font-size: 1.4rem;
   margin-bottom: 2rem;
 }
-.hero-features {
+.info-features {
   list-style: none;
   padding: 0;
   margin: 0 0 1.5rem 0;
 }
 
-.hero-features li {
-  font-size: 1rem;
+.info-features li {
+  font-size: 1.2rem;
   margin: 0.3rem 0;       /* reduce vertical spacing */
   line-height: 1.2;        /* reduce line height */
 }
