@@ -1,7 +1,7 @@
 :root {
   --font: 'Inter', sans-serif;
   --bg: #fdfdfd;
-  --text: #222;
+  --text: #333;
   --primary: #6995C2;
   --secondary: #e2e8f0;
   --radius: 12px;
@@ -39,7 +39,7 @@ main h3 {
 
 main p {
   margin-bottom: 1rem;
-  color: #333;
+  color: var(--text);
 }
 
 main ul {
@@ -129,7 +129,7 @@ body {
 .subtitle {
   font-size: clamp(1rem, 5vw, 2rem);
   margin-bottom: 1.2rem;
-  color: #444;
+  color: var(--text);
 }
 
 .actions {
