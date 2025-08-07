@@ -77,16 +77,18 @@ body {
   background-color: var(--bg); /* ensures white-ish background if needed */
 }
 
+.nav-container {
+  width: 100%;
+  max-width: 750px;         /* stop expanding beyond this */
+  padding: 0 1rem;          /* space on smaller screens */
+  margin: 0 auto;           /* center horizontally */
+}
+
 .nav {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: space-between;
   align-items: center;
-  gap: clamp(0.5rem, 2vw, 2rem);
-  flex-wrap: wrap;
-  text-align: center;
-  padding: 0 1rem;
-  margin: 0.4rem auto;  /* ✅ center the nav horizontally */
-  max-width: clamp(300px, 80%, 1000px); /* ✅ prevent it from getting too wide */
+  padding: 0.4rem 0;       /* no horizontal padding here anymore */
 }
 
 .nav a {
@@ -97,15 +99,33 @@ body {
   text-align: center;
   white-space: nowrap;   /* prevent text from breaking mid-word */
   padding: 0.25rem 0.5rem;
+  transition: transform 0.2s ease;
+  display: inline-block; /* necessary for transform to work */
 }
 
-.nav a.beacon-blue {
-  color: var(--primary);
-  font-size: 1.6rem;
+.nav a:hover {
+  transform: scale(1.05);
 }
 
-.nav a.beacon-blue:hover {
-    transform: scale(1.1);
+.nav a.beacon-button {
+  color: var(--primary);             /* from .beacon-blue */
+  padding: 0 1rem;
+  border: none;
+  border-radius: 9999px;             /* fully rounded button */
+  font-weight: 600;
+  font-size: 1.6rem;                 /* from .beacon-blue */
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+}
+
+.nav a.beacon-button:hover {
+  background-color: #D4E6F5;
+  transform: scale(1.05);            /* from .beacon-blue:hover */
+}
+
+.nav a.beacon-button:active {
+  background-color: #C0D8EE;
 }
 
 .hero {
@@ -279,4 +299,38 @@ button.btn.primary {
 
 .app-store-badge:hover {
   transform: scale(1.1);
+}
+
+.nav .app-download-button {
+  background-color: var(--primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.nav .app-download-button:hover {
+  background-color: #2e7ac7;
+  transform: scale(1.05);
+}
+
+.footer-links {
+  margin-top: 0.8rem;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: #888;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: var(--primary);
 }
