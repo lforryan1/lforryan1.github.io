@@ -17,6 +17,13 @@ html, body {
   min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior-y: none;
+}
+
+body::after {
+  content: "";
+  display: block;
+  height: 2rem;
 }
 
 main {
