@@ -1,37 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Email Verified — Beacon</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Email Verification — Beacon</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; }
+    header, footer { border-bottom: 1px solid #eee; padding: 12px 16px; }
+    footer { border-top: 1px solid #eee; border-bottom: none; }
+    .container { max-width: 720px; margin: 0 auto; padding: 24px 16px 40px; }
+    .status { padding: 16px; border-radius: 12px; background: #F4F2F3; }
+    .ok { background: #E7F6EE; }
+    .err { background: #FDECEC; }
+    .muted { color: #555; }
+    .btn { display:inline-block; padding:10px 16px; border-radius:9999px; border:1px solid #ddd; text-decoration:none; }
+    .hidden { display:none; }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="nav-container">
-      <nav class="nav">
-        <a class="beacon-button" href="index.html">Beacon</a>
-        <a class="app-download-button" href="https://apps.apple.com/gb/app/beacon-light-a-beacon/id6677053246" target="_blank" rel="noopener">Get the App</a>
-      </nav>
+  <header>
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;">
+      <a class="btn" href="/">Beacon</a>
+      <a class="btn" href="https://apps.apple.com/gb/app/beacon-light-a-beacon/id6677053246" target="_blank" rel="noopener">Get the App</a>
     </div>
   </header>
 
-  <main class="container" style="padding-top: 3rem;">
-    <h1>Email Verified</h1>
-    <p>Thank you for verifying your email. Please return to the app.</p>
+  <main class="container">
+    <h1 id="title">Verifying your email…</h1>
+    <div id="status" class="status">
+      Please wait while we complete your verification.
+    </div>
+    <p id="hint" class="muted">You can keep this page open; it should only take a moment.</p>
+
+    <div id="actions" class="hidden" style="margin-top:16px;">
+      <!-- If you don’t set up app deep links, keep this -->
+      <a class="btn" href="/" id="returnLink">Return to Beacon</a>
+    </div>
   </main>
 
-  <footer class="site-footer">
-    <div class="container">
-      <p>&copy; 2025 Beacon Social Limited. All rights reserved.</p>
-      <div class="footer-links">
-        <a href="privacy.html">Privacy Policy</a>
-        <a href="eula.html">EULA</a>
-        <a href="contact.html">Contact</a>
-      </div>
+  <footer>
+    <div class="container" style="display:flex;gap:12px;flex-wrap:wrap;">
+      <span>&copy; 2025 Beacon Social Limited</span>
+      <a class="btn" href="/privacy.html">Privacy Policy</a>
+      <a class="btn" href="/eula.html">EULA</a>
+      <a class="btn" href="/contact.html">Contact</a>
     </div>
   </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, applyActionCode } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    // 1) Fill in your Firebase web config here (Console → Project settings → General → Web app)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCyHTF5uvUsA06hWNN03FJEnx2M2RYYwhE",
+      authDomain: "beacon-1f7ee.firebaseapp.com",
+      projectId: "beacon-1f7ee",
+      storageBucket: "beacon-1f7ee.appspot.com",
+      messagingSenderId: "1073809897154",
+      appId: "1:1073809897154:web:50780d3d6c497db1212d5b",
+      measurementId: "G-3Y48MJB00S"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // 2) Parse the link parameters
+    const params = new URLSearchParams(location.search);
+    const mode = params.get("mode");
+    const oobCode = params.get("oobCode");
+    const continueUrl = params.get("continueUrl"); // optional, if you ever add one
+
+    const titleEl = document.getElementById("title");
+    const statusEl = document.getElementById("status");
+    const hintEl = document.getElementById("hint");
+    const actionsEl = document.getElementById("actions");
+
+    function showSuccess(message = "Your email has been verified. You can return to the app.") {
+      titleEl.textContent = "Email Verified";
+      statusEl.textContent = message;
+      statusEl.classList.add("ok");
+      hintEl.textContent = "";
+      actionsEl.classList.remove("hidden");
+
+      // 3) Optional: deep-link into your mobile app (see Step 4)
+      // location.replace("https://beaconapp.ai/open");
+    }
+
+    function showError(message = "This verification link is invalid, expired, or already used.") {
+      titleEl.textContent = "Verification issue";
+      statusEl.textContent = message;
+      statusEl.classList.add("err");
+      hintEl.textContent = "If you’re sure you just verified, simply return to the app and tap “I’ve verified”.";
+      actionsEl.classList.remove("hidden");
+    }
+
+    async function run() {
+      try {
+        if (mode !== "verifyEmail" || !oobCode) {
+          showError("Missing or invalid verification parameters.");
+          return;
+        }
+
+        // 4) Apply the code — this marks the email verified in Firebase
+        await applyActionCode(auth, oobCode);
+
+        // If you used continueUrl, you could redirect there; otherwise:
+        showSuccess();
+
+      } catch (e) {
+        // Common causes:
+        // - Email security scanners followed the link earlier (code already consumed)
+        // - Link truly expired
+        // If scanners consumed it but verification succeeded, user is actually fine.
+        // We can't check their auth status on this static page (not signed-in web session),
+        // so just show a helpful message.
+        console.warn("applyActionCode failed:", e);
+        showError();
+      }
+    }
+
+    run();
+  </script>
 </body>
 </html>
