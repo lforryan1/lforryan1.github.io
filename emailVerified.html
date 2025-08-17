@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Email Verification — Beacon</title>
+  <title>Account Actions — Beacon</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -20,6 +20,31 @@
     .muted { color: #555; }
     .hidden { display: none; }
     .center { text-align: center; }
+    .form {
+      max-width: 420px;
+      margin: 1rem auto;
+    }
+    .form .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .form label {
+      font-weight: 600;
+    }
+    .form input[type="password"] {
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      width: 100%;
+      font-size: 1rem;
+    }
+    .error-text {
+      color: #b00020;
+      font-size: 0.9rem;
+    }
+    .btn-row { display: flex; gap: 0.5rem; justify-content: center; }
   </style>
 </head>
 <body class="verify-page">
@@ -33,16 +58,52 @@
   </header>
 
   <main class="container" style="padding-top: 3rem;">
-    <h1 id="title" class="center" style="margin-bottom: 0.5rem;">Verifying your email…</h1>
+    <h1 id="title" class="center" style="margin-bottom: 0.5rem;">Working on your request…</h1>
 
     <div id="status" class="status" role="status" aria-live="polite">
-      Please wait while we complete your verification.
+      Please wait while we complete your request.
     </div>
     <p id="hint" class="muted center">You can keep this page open; it should only take a moment.</p>
 
+    <!-- Password Reset UI (revealed only for resetPassword/action) -->
+    <section id="resetSection" class="hidden" aria-hidden="true">
+      <p class="center muted" id="resetEmailNote"></p>
+      <form id="resetForm" class="form" autocomplete="off" novalidate>
+        <div class="field">
+          <label for="newPassword">New password</label>
+          <input
+            id="newPassword"
+            name="newPassword"
+            type="password"
+            minlength="8"
+            required
+            aria-describedby="newPasswordError"
+            autocomplete="new-password"
+          />
+          <div id="newPasswordError" class="error-text" role="alert" aria-live="polite"></div>
+        </div>
+        <div class="field">
+          <label for="confirmationPassword">Confirm new password</label>
+          <input
+            id="confirmationPassword"
+            name="confirmationPassword"
+            type="password"
+            minlength="8"
+            required
+            aria-describedby="confirmationPasswordError"
+            autocomplete="new-password"
+          />
+          <div id="confirmationPasswordError" class="error-text" role="alert" aria-live="polite"></div>
+        </div>
+        <div class="btn-row">
+          <button type="submit" class="btn primary">Set new password</button>
+        </div>
+      </form>
+      <p class="center muted">Minimum 8 characters.</p>
+    </section>
+
     <div id="actions" class="center hidden" style="margin-top: 1rem;">
-      <!-- If you don’t set up app deep links, keep this -->
-      <a class="btn primary" href="index.html" id="returnLink">Return to Beacon</a>
+      <a class="btn" href="index.html" id="returnLink">Return to Beacon</a>
     </div>
   </main>
 
@@ -59,9 +120,14 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, applyActionCode } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getAuth,
+      applyActionCode,
+      verifyPasswordResetCode,
+      confirmPasswordReset
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    // 1) Fill in your Firebase web config here
+    // Firebase web config
     const firebaseConfig = {
       apiKey: "AIzaSyCyHTF5uvUsA06hWNN03FJEnx2M2RYYwhE",
       authDomain: "beacon-1f7ee.firebaseapp.com",
@@ -74,51 +140,168 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // 2) Parse the link parameters
+    // Query params
     const params = new URLSearchParams(location.search);
-    const mode = params.get("mode");
+    let mode = params.get("mode");
     const oobCode = params.get("oobCode");
     const continueUrl = params.get("continueUrl"); // optional
 
+    // Some templates might (incorrectly) send mode=action for resets — treat it as reset
+    if (mode === "action") mode = "resetPassword";
+
+    // DOM
     const titleEl = document.getElementById("title");
     const statusEl = document.getElementById("status");
     const hintEl = document.getElementById("hint");
     const actionsEl = document.getElementById("actions");
+    const resetSection = document.getElementById("resetSection");
+    const resetEmailNote = document.getElementById("resetEmailNote");
+    const resetForm = document.getElementById("resetForm");
+    const newPasswordInput = document.getElementById("newPassword");
+    const confirmationPasswordInput = document.getElementById("confirmationPassword");
+    const newPasswordError = document.getElementById("newPasswordError");
+    const confirmationPasswordError = document.getElementById("confirmationPasswordError");
 
-    function showSuccess(message = "Your email has been verified. You can return to the app.") {
-      titleEl.textContent = "Email Verified";
-      statusEl.textContent = message;
+    // Helpers
+    function showSuccess(message, showActions = true) {
+      titleEl.textContent = "All set";
+      statusEl.textContent = message || "Done.";
       statusEl.classList.remove("err");
       statusEl.classList.add("ok");
       hintEl.textContent = "";
-      actionsEl.classList.remove("hidden");
-      // Optional: deep-link into your mobile app
-      // location.replace("https://beaconapp.ai/open");
+      if (showActions) actionsEl.classList.remove("hidden");
     }
 
-    function showError(message = "This verification link is invalid, expired, or already used.") {
-      titleEl.textContent = "Verification issue";
-      statusEl.textContent = message;
+    function showInfo(title, message, hint) {
+      if (title) titleEl.textContent = title;
+      if (message) statusEl.textContent = message;
+      statusEl.classList.remove("err", "ok");
+      if (hint !== undefined) hintEl.textContent = hint;
+    }
+
+    function showError(message) {
+      titleEl.textContent = "There was a problem";
+      statusEl.textContent = message || "The link is invalid, expired, or already used.";
       statusEl.classList.remove("ok");
       statusEl.classList.add("err");
-      hintEl.textContent = "If you’re sure you just verified, simply return to the app and tap “I’ve verified”.";
+      hintEl.textContent = "If this keeps happening, request a new link from the app.";
       actionsEl.classList.remove("hidden");
     }
 
-    async function run() {
+    // Validation mirroring the Yup schema:
+    // newPassword: required, min 8
+    // confirmationPassword: required, oneOf([newPassword]) with "Passwords must match"
+    function validateResetForm() {
+      let valid = true;
+
+      // Reset messages
+      newPasswordError.textContent = "";
+      confirmationPasswordError.textContent = "";
+
+      const pw1 = newPasswordInput.value.trim();
+      const pw2 = confirmationPasswordInput.value.trim();
+
+      if (!pw1) {
+        newPasswordError.textContent = "New password is required";
+        valid = false;
+      } else if (pw1.length < 8) {
+        newPasswordError.textContent = "New password must be at least 8 characters long";
+        valid = false;
+      }
+
+      if (!pw2) {
+        confirmationPasswordError.textContent = "Please confirm your new password";
+        valid = false;
+      } else if (pw1 && pw1 !== pw2) {
+        confirmationPasswordError.textContent = "Passwords must match";
+        valid = false;
+      }
+
+      return { valid, pw1 };
+    }
+
+    async function handleVerifyEmail() {
       try {
-        if (mode !== "verifyEmail" || !oobCode) {
-          showError("Missing or invalid verification parameters.");
+        if (!oobCode) {
+          showError("Missing verification code.");
           return;
         }
         await applyActionCode(auth, oobCode);
-        showSuccess();
+        if (continueUrl) {
+          showInfo("Email verified", "Redirecting…");
+          location.replace(continueUrl);
+          return;
+        }
+        showSuccess("Your email has been verified. You can return to the app.");
       } catch (e) {
         console.warn("applyActionCode failed:", e);
-        showError();
+        showError("This verification link may be invalid or expired.");
       }
     }
-    run();
+
+    async function handleResetPassword() {
+      try {
+        if (!oobCode) {
+          showError("Missing reset code.");
+          return;
+        }
+        // Validate/inspect the code first and show the form
+        const email = await verifyPasswordResetCode(auth, oobCode);
+        // Update UI for reset
+        titleEl.textContent = "Reset your password";
+        statusEl.textContent = "Enter a new password for your account.";
+        statusEl.classList.remove("err", "ok");
+        hintEl.textContent = "";
+        resetEmailNote.textContent = email ? `Resetting password for ${email}` : "";
+        resetSection.classList.remove("hidden");
+        resetSection.setAttribute("aria-hidden", "false");
+
+        // Handle submit (only once)
+        resetForm.addEventListener("submit", async (ev) => {
+          ev.preventDefault();
+          const { valid, pw1 } = validateResetForm();
+          if (!valid) return;
+
+          try {
+            await confirmPasswordReset(auth, oobCode, pw1);
+            if (continueUrl) {
+              showInfo("Password updated", "Redirecting…");
+              location.replace(continueUrl);
+              return;
+            }
+            showSuccess("Your password has been updated. You can return to the app.");
+          } catch (e) {
+            console.warn("confirmPasswordReset failed:", e);
+            showError("This reset link is no longer valid. Request a new password reset from the app.");
+          }
+        }, { once: true });
+
+      } catch (e) {
+        console.warn("verifyPasswordResetCode failed:", e);
+        showError("This password reset link is invalid or expired. Request a new one from the app.");
+      }
+    }
+
+    // Router
+    (async function run() {
+      try {
+        if (!mode) {
+          showError("Missing action mode.");
+          return;
+        }
+        if (mode === "verifyEmail") {
+          await handleVerifyEmail();
+        } else if (mode === "resetPassword") {
+          await handleResetPassword();
+        } else {
+          // Unknown/unsupported mode (e.g., recoverEmail). Fall back with a helpful message.
+          showError("This link type isn’t supported on this page.");
+        }
+      } catch (e) {
+        console.warn("run failed:", e);
+        showError();
+      }
+    })();
   </script>
 </body>
 </html>
